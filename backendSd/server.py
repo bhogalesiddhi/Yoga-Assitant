@@ -8,7 +8,7 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
 
-from models import db , User
+from models import db , User , Blog
 
  
 # Initializing flask app
@@ -101,6 +101,57 @@ def register():
         "id" : new_user.id,
         "email" : new_user.email
     })
+
+@app.route('/api/getblogs', methods=['GET'])
+def get_blogs():
+    blogs = Blog.query.all()
+
+    if not blogs:
+        return jsonify({'message': 'No blogs found'}), 404
+
+    blog_list = []
+    for blog in blogs:
+        blog_data = {
+            'id': blog.id,
+            'title': blog.title,
+            'content': blog.content,
+            'author_id': blog.author_id,
+            'created_at': blog.created_at,
+            'updated_at': blog.updated_at
+        }
+        blog_list.append(blog_data)
+
+    return jsonify(blog_list), 200 
+
+
+@app.route('/api/blogs', methods=['POST'])
+@jwt_required()
+def add_blogs():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    title = request.json['title']
+    content = request.json['content']
+
+    if not title or not content:
+        return jsonify({'error': 'Title and content are required'}), 400
+
+    new_blog = Blog(title=title, content=content, author_id=user.id)
+
+    db.session.add(new_blog)
+    db.session.commit()
+
+    return jsonify({
+        'id': new_blog.id,
+        'title': new_blog.title,
+        'content': new_blog.content,
+        'author_id': new_blog.author_id,
+        'created_at': new_blog.created_at,
+        'updated_at': new_blog.updated_at
+    }), 201
 
 # Route for seeing a data
 @app.route('/api/data',methods=['GET'])

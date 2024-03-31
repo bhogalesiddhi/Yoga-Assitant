@@ -1,0 +1,11 @@
+# Common build artifacts
+node_modules/
+dist/
+build/
+
+# Flask-specific configuration (if applicable)
+.env
+
+# IDE or editor temporary files
+.idea/
+.vscode/
